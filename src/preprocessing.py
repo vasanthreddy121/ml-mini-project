@@ -32,7 +32,7 @@ def rgb_to_yuv(image_rgb):
     return y, u, v
 
 
-def preprocess_image(image_path, split):
+def preprocess_image(image_path, split, output_root="outputs"):
     """Preprocess one image."""
 
     image_bgr = cv2.imread(image_path)
@@ -56,7 +56,7 @@ def preprocess_image(image_path, split):
 
     # Save grayscale Y channel
     grayscale_dir = os.path.join(
-        "outputs",
+        output_root,
         "grayscale",
         split
     )
@@ -72,7 +72,7 @@ def preprocess_image(image_path, split):
 
     # Save processed Y, U, V channels
     processed_dir = os.path.join(
-        "outputs",
+        output_root,
         "processed",
         split
     )

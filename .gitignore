@@ -24,3 +24,14 @@ build/
 # Temporary files
 *.tmp
 *.log
+*.crdownload
+
+# Generated local experiments and live-demo artifacts
+DIV2K_train_HR/
+DIV2K_train_HR.zip
+models_div2k/
+models_mixed_div2k/
+outputs/div2k/
+outputs/mixed_div2k/
+outputs/live/
+te.jpeg
