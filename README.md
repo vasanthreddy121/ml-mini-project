@@ -154,6 +154,32 @@ Candidate evaluation uses the untouched six-image original test split and
 writes per-image and average baseline-versus-candidate MAE, MSE, RMSE, and PSNR
 to `outputs/div2k/evaluation/test_comparison_metrics.csv`.
 
+### 100-Image DIV2K experiment
+
+To run the reproducible 100-image DIV2K experiment (80 train / 20 validation split, seed 42):
+
+```bash
+python main.py div2k-prepare --div2k-limit 100 --div2k-seed 42
+python main.py div2k-segment
+python main.py div2k-features
+python main.py div2k-train
+python main.py div2k-evaluate
+```
+
+Or run all stages in sequence:
+
+```bash
+python main.py div2k-all --div2k-limit 100 --div2k-seed 42
+```
+
+Verified benchmark and evaluation summary for 100 images:
+- **Sample counts**: 19,332 total superpixels extracted (15,466 training, 3,866 validation across 80/20 split).
+- **Training rows**: 10,000 deterministically sampled superpixels (capped via `--div2k-max-train-samples`).
+- **Runtime**: Preprocessing ~18s, SLIC ~11s, FFT features ~11s, SVR training ~7.3s (total ~1.5 min).
+- **Evaluation on untouched test images**:
+  - Baseline (`baseline_svr_mrf`): MAE = 16.912, MSE = 708.801, RMSE = 24.648, PSNR = 20.833 dB
+  - 100-image DIV2K (`div2k_svr_mrf`): MAE = 22.144, MSE = 1042.846, RMSE = 30.064, PSNR = 19.094 dB
+
 The DIV2K candidate is experimental and underperformed the baseline on the
 original test set. It remains opt-in only:
 

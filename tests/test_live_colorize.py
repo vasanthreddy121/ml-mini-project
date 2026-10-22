@@ -35,6 +35,42 @@ class LiveColorizeTest(unittest.TestCase):
                     self.assertTrue(np.isfinite(diagnostics["u"]).all())
                     self.assertTrue(np.isfinite(diagnostics["v"]).all())
 
+    def test_values_to_image_alignment_and_no_transposition(self):
+        """Verify values_to_image maps segment IDs exactly to mask without transposition."""
+        from src.colorize import values_to_image
+        # Create non-symmetric grid: 3 rows x 5 columns
+        segments = np.zeros((30, 50), dtype=int)
+        segments[:15, :25] = 10
+        segments[:15, 25:] = 20
+        segments[15:, :25] = 30
+        segments[15:, 25:] = 40
+        segment_ids = np.array([10, 20, 30, 40])
+        values = np.array([111.0, 122.0, 133.0, 144.0], dtype=np.float32)
+
+        mapped = values_to_image(values, segment_ids, segments)
+        self.assertEqual(mapped.shape, (30, 50))
+        self.assertTrue(np.all(mapped[:15, :25] == 111.0))
+        self.assertTrue(np.all(mapped[:15, 25:] == 122.0))
+        self.assertTrue(np.all(mapped[15:, :25] == 133.0))
+        self.assertTrue(np.all(mapped[15:, 25:] == 144.0))
+
+    def test_yuv_rgb_channel_order_and_clipping(self):
+        """Verify YUV-to-RGB conversion preserves channel order and clips without overflow."""
+        from src.colorize import yuv_to_rgb
+        from src.preprocessing import rgb_to_yuv
+        y = np.full((10, 10), 128, dtype=np.uint8)
+        # Test extreme out-of-range values
+        u = np.full((10, 10), 300.0, dtype=np.float32)  # Should clip to 255
+        v = np.full((10, 10), -50.0, dtype=np.float32)  # Should clip to 0
+        rgb = yuv_to_rgb(y, u, v)
+        self.assertEqual(rgb.shape, (10, 10, 3))
+        self.assertEqual(rgb.dtype, np.uint8)
+        # Verify roundtrip on known color
+        ref_rgb = np.array([[[180, 140, 100]]], dtype=np.uint8)
+        y_val, u_val, v_val = rgb_to_yuv(ref_rgb)
+        recon_rgb = yuv_to_rgb(y_val, u_val, v_val)
+        self.assertLessEqual(np.max(np.abs(ref_rgb.astype(int) - recon_rgb.astype(int))), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
