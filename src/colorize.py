@@ -7,7 +7,7 @@ import joblib
 import numpy as np
 
 from src import features, mrf, segmentation
-from src.config import ICM_ITERATIONS, MRF_GAMMA
+from src.config import COMPACTNESS, ICM_ITERATIONS, MRF_GAMMA
 from src.preprocessing import SUPPORTED_EXTENSIONS, resize_image, rgb_to_yuv
 
 def yuv_to_rgb(y, u, v):
@@ -144,20 +144,26 @@ def _print_chrominance_stats(stage, u_values, v_values):
         )
 
 
-def colorize_live_image(input_path, model_dir="models", output_root="outputs/live"):
+def colorize_live_image(input_path, model_dir="models", output_root="outputs/live",
+                        compactness=None, gamma=None):
     """Colorize a new grayscale image using saved models and configured MRF/ICM.
 
     This inference-only path never reads or requires ground-truth U/V values.
     It returns paths for the input preview, SLIC view, SVR output, and refined
     estimated colourization.
     """
+    if compactness is None:
+        compactness = COMPACTNESS
+    if gamma is None:
+        gamma = MRF_GAMMA
+
     input_path = Path(input_path).expanduser()
     y = load_live_luminance(input_path)
     output_dir = Path(output_root) / input_path.stem
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("Generating SLIC superpixels...")
-    segments = segmentation.segment_image(y)
+    print(f"Generating SLIC superpixels (compactness={compactness})...")
+    segments = segmentation.segment_image(y, compactness=compactness)
     slic_path = output_dir / "slic_superpixels.png"
     segmentation.save_segmentation_visualization(y, segments, str(slic_path))
 
@@ -178,9 +184,9 @@ def colorize_live_image(input_path, model_dir="models", output_root="outputs/liv
     svr_rgb = yuv_to_rgb(y, svr_u, svr_v)
     _validate_live_result(y, feature_matrix, scaler, predicted_u, predicted_v, svr_rgb)
 
-    print(f"Refining chrominance with MRF/ICM ({ICM_ITERATIONS} iterations, gamma={MRF_GAMMA})...")
-    refined_u = mrf.refine_chrominance(predicted_u, segment_ids, segments)
-    refined_v = mrf.refine_chrominance(predicted_v, segment_ids, segments)
+    print(f"Refining chrominance with MRF/ICM ({ICM_ITERATIONS} iterations, gamma={gamma})...")
+    refined_u = mrf.refine_chrominance(predicted_u, segment_ids, segments, gamma=gamma)
+    refined_v = mrf.refine_chrominance(predicted_v, segment_ids, segments, gamma=gamma)
     _validate_superpixel_arrays(refined_u, refined_v, segment_ids, segments, "MRF")
     _print_chrominance_stats("MRF", refined_u, refined_v)
     final_rgb = mrf.yuv_to_rgb(
@@ -201,7 +207,7 @@ def colorize_live_image(input_path, model_dir="models", output_root="outputs/liv
     np.savez_compressed(predicted_uv_path, u=predicted_u, v=predicted_v,
                         segment_ids=segment_ids)
     np.savez_compressed(refined_uv_path, u=refined_u, v=refined_v,
-                        segment_ids=segment_ids)
+                        segment_ids=segment_ids, compactness=compactness, gamma=gamma)
     for path in (preview_path, slic_path, svr_path, final_path,
                  predicted_uv_path, refined_uv_path):
         if not path.is_file() or path.stat().st_size == 0:

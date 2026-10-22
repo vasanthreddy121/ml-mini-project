@@ -8,21 +8,23 @@ from skimage.util import img_as_float
 from src.config import N_SEGMENTS, COMPACTNESS
 
 
-def segment_image(y_channel):
+def segment_image(y_channel, compactness=None):
     """
     Apply SLIC superpixel segmentation to the luminance channel.
     """
+    if compactness is None:
+        compactness = COMPACTNESS
 
     # Convert grayscale image to floating-point format
     image_float = img_as_float(y_channel)
 
     segments = slic(
-    image_float,
-    n_segments=N_SEGMENTS,
-    compactness=COMPACTNESS,
-    start_label=0,
-    channel_axis=None
-)
+        image_float,
+        n_segments=N_SEGMENTS,
+        compactness=compactness,
+        start_label=0,
+        channel_axis=None
+    )
     return segments
 
 

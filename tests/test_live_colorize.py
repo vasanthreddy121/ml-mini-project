@@ -71,6 +71,26 @@ class LiveColorizeTest(unittest.TestCase):
         recon_rgb = yuv_to_rgb(y_val, u_val, v_val)
         self.assertLessEqual(np.max(np.abs(ref_rgb.astype(int) - recon_rgb.astype(int))), 1)
 
+    def test_live_colorize_with_custom_compactness_and_gamma(self):
+        """Verify custom compactness and gamma are applied and saved in diagnostics."""
+        source = cv2.imread("dataset/test/l1.jpg", cv2.IMREAD_GRAYSCALE)
+        self.assertIsNotNone(source)
+        with tempfile.TemporaryDirectory() as temporary_dir:
+            temp_dir = Path(temporary_dir)
+            input_path = temp_dir / "custom_test.png"
+            self.assertTrue(cv2.imwrite(str(input_path), source))
+            outputs = colorize_live_image(
+                input_path,
+                model_dir="models",
+                output_root=temp_dir / "custom_out",
+                compactness=0.2,
+                gamma=0.1,
+            )
+            self.assertTrue(Path(outputs["mrf_refined"]).is_file())
+            with np.load(outputs["refined_uv"]) as diag:
+                self.assertAlmostEqual(float(diag["compactness"]), 0.2)
+                self.assertAlmostEqual(float(diag["gamma"]), 0.1)
+
 
 if __name__ == "__main__":
     unittest.main()

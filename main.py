@@ -17,6 +17,12 @@ def main():
     parser.add_argument("--input", help="new grayscale image for the colorize command")
     parser.add_argument("--model-dir", default="models",
                         help="model directory for live colorize (default: models)")
+    parser.add_argument("--compactness", type=float, default=None,
+                        help="SLIC compactness for live colorize (default: from config)")
+    parser.add_argument("--gamma", type=float, default=None,
+                        help="MRF smoothing gamma for live colorize (default: from config)")
+    parser.add_argument("--output-dir", default=None,
+                        help="output directory root for live colorize (default: outputs/live)")
     parser.add_argument("--div2k-limit", type=int, default=DIV2K_PILOT_IMAGES,
                         help=f"number of DIV2K source images (default: {DIV2K_PILOT_IMAGES})")
     parser.add_argument("--div2k-seed", type=int, default=DIV2K_SPLIT_SEED,
@@ -40,7 +46,14 @@ def main():
         train.train_models()
     if args.command == "colorize" and args.input:
         try:
-            outputs = colorize.colorize_live_image(args.input, model_dir=args.model_dir)
+            output_root = args.output_dir if args.output_dir else "outputs/live"
+            outputs = colorize.colorize_live_image(
+                args.input,
+                model_dir=args.model_dir,
+                output_root=output_root,
+                compactness=args.compactness,
+                gamma=args.gamma,
+            )
         except (FileNotFoundError, OSError, ValueError) as error:
             parser.error(str(error))
         print("\nLive colorization complete (estimated colours; not ground truth):")
