@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-10-22 18:08:27",
+  "best_config": {
+    "model_directory": "models_sprint_et_nature",
+    "architecture": "ExtraTreesRegressor (n_estimators=100, max_depth=15, n_jobs=-1)",
+    "compactness": 0.1,
+    "gamma": 0.1,
+    "smooth_chroma": true,
+    "bilateral_filter": {
+      "diameter": 7,
+      "sigma_color": 15,
+      "sigma_space": 7
+    },
+    "test_metrics": {
+      "average_mae": 14.169822851816813,
+      "average_psnr_db": 22.59285960483244,
+      "mae_reduction_vs_baseline": 2.742,
+      "psnr_boost_vs_baseline_db": 1.76
+    },
+    "inference_command": ".venv/bin/python main.py colorize --input tree.jpg --model-dir models_sprint_et_nature --compactness 0.1 --gamma 0.1 --smooth-chroma"
+  },
+  "per_image_metrics": [
+    {
+      "image": "l1",
+      "baseline_mae": 14.813763618469238,
+      "baseline_psnr": 21.37890833972616,
+      "previous_et_mae": 16.894609451293945,
+      "previous_et_psnr": 20.993867798573756,
+      "optimized_et_mae": 17.39175796508789,
+      "optimized_et_psnr": 20.782741363955108
+    },
+    {
+      "image": "l2",
+      "baseline_mae": 12.82751178741455,
+      "baseline_psnr": 23.13438829457045,
+      "previous_et_mae": 8.999695777893066,
+      "previous_et_psnr": 25.705002956005906,
+      "optimized_et_mae": 9.109722137451172,
+      "optimized_et_psnr": 25.67173840193092
+    },
+    {
+      "image": "m1",
+      "baseline_mae": 14.350503921508789,
+      "baseline_psnr": 21.151159849554904,
+      "previous_et_mae": 13.124451637268066,
+      "previous_et_psnr": 22.04277493317809,
+      "optimized_et_mae": 12.824654579162598,
+      "optimized_et_psnr": 22.245640355303284
+    },
+    {
+      "image": "m2",
+      "baseline_mae": 31.32839584350586,
+      "baseline_psnr": 14.71906566970529,
+      "previous_et_mae": 26.799631118774414,
+      "previous_et_psnr": 16.38390908223861,
+      "optimized_et_mae": 26.50078010559082,
+      "optimized_et_psnr": 16.49263317867126
+    },
+    {
+      "image": "m3",
+      "baseline_mae": 13.691230773925781,
+      "baseline_psnr": 21.742122158251817,
+      "previous_et_mae": 12.311341285705566,
+      "previous_et_psnr": 22.64272952066626,
+      "optimized_et_mae": 12.468088150024414,
+      "optimized_et_psnr": 22.50609426113469
+    },
+    {
+      "image": "r1",
+      "baseline_mae": 14.46248722076416,
+      "baseline_psnr": 22.872890084230374,
+      "previous_et_mae": 6.974298477172852,
+      "previous_et_psnr": 27.826827510691654,
+      "optimized_et_mae": 6.723934173583984,
+      "optimized_et_psnr": 27.858310067999383
+    }
+  ],
+  "averages": {
+    "baseline_mae": 16.912315527598064,
+    "baseline_psnr": 20.833089066006497,
+    "previous_et_mae": 14.184004624684652,
+    "previous_et_psnr": 22.599185300225713,
+    "optimized_et_mae": 14.169822851816813,
+    "optimized_et_psnr": 22.59285960483244
+  }
+}
