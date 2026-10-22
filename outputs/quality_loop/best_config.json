@@ -1,0 +1,19 @@
+{
+  "model_directory": "models_sprint_et_nature",
+  "architecture": "ExtraTreesRegressor (n_estimators=100, max_depth=15, n_jobs=-1)",
+  "compactness": 0.1,
+  "gamma": 0.1,
+  "smooth_chroma": true,
+  "bilateral_filter": {
+    "diameter": 7,
+    "sigma_color": 15,
+    "sigma_space": 7
+  },
+  "test_metrics": {
+    "average_mae": 14.169822851816813,
+    "average_psnr_db": 22.59285960483244,
+    "mae_reduction_vs_baseline": 2.742,
+    "psnr_boost_vs_baseline_db": 1.76
+  },
+  "inference_command": ".venv/bin/python main.py colorize --input tree.jpg --model-dir models_sprint_et_nature --compactness 0.1 --gamma 0.1 --smooth-chroma"
+}

@@ -91,6 +91,29 @@ class LiveColorizeTest(unittest.TestCase):
                 self.assertAlmostEqual(float(diag["compactness"]), 0.2)
                 self.assertAlmostEqual(float(diag["gamma"]), 0.1)
 
+    def test_live_colorize_with_smooth_chroma_flag(self):
+        """Verify smooth_chroma bilateral edge-preserving smoothing flag functions correctly."""
+        source = cv2.imread("dataset/test/l1.jpg", cv2.IMREAD_GRAYSCALE)
+        self.assertIsNotNone(source)
+        with tempfile.TemporaryDirectory() as temporary_dir:
+            temp_dir = Path(temporary_dir)
+            input_path = temp_dir / "smooth_test.png"
+            self.assertTrue(cv2.imwrite(str(input_path), source))
+            outputs = colorize_live_image(
+                input_path,
+                model_dir="models",
+                output_root=temp_dir / "smooth_out",
+                compactness=0.1,
+                gamma=0.1,
+                smooth_chroma=True,
+            )
+            self.assertTrue(Path(outputs["mrf_refined"]).is_file())
+            result = cv2.imread(str(outputs["mrf_refined"]), cv2.IMREAD_COLOR)
+            self.assertIsNotNone(result)
+            self.assertEqual(result.shape[2], 3)
+            with np.load(outputs["refined_uv"]) as diag:
+                self.assertTrue(bool(diag["smooth_chroma"]))
+
 
 if __name__ == "__main__":
     unittest.main()

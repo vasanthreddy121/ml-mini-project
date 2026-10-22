@@ -21,12 +21,27 @@ ml_env/
 dist/
 build/
 
-# Temporary files
+# Temporary and scratch files
 *.tmp
 *.log
 *.crdownload
+te.jpeg
+te2.png
+/*_gray.png
 
-# Generated local experiments and live-demo artifacts
+# User privacy: personal human portrait test photo and derivative face panels
+human_test.png
+outputs/**/human_portrait*.png
+
+# University draft documents & personal student identifiers
+*.docx
+*.odt
+*.pdf
+
+# External pretrained weights (>100MB files exceeding GitHub limits)
+pretrained_models/
+
+# DIV2K raw training datasets
 DIV2K_train_HR/
 DIV2K_train_HR.zip
 models_div2k/
@@ -34,4 +49,15 @@ models_mixed_div2k/
 outputs/div2k/
 outputs/mixed_div2k/
 outputs/live/
-te.jpeg
+
+# Redundant intermediate sweeps (distilled into outputs/final_solution/ and outputs/quality_loop/)
+models_experiment_comp*/
+outputs/diagnostics/
+outputs/experiment_comp*/
+outputs/improvement_sprint/
+outputs/live_nature_et/
+outputs/live_sprint_et/
+outputs/photo_comparisons/
+outputs/review_demo/
+outputs/slic_tuning_summary.json
+outputs/quality_loop/baseline_run/

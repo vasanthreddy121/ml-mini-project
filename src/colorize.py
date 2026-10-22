@@ -145,12 +145,13 @@ def _print_chrominance_stats(stage, u_values, v_values):
 
 
 def colorize_live_image(input_path, model_dir="models", output_root="outputs/live",
-                        compactness=None, gamma=None):
+                        compactness=None, gamma=None, smooth_chroma=False):
     """Colorize a new grayscale image using saved models and configured MRF/ICM.
 
     This inference-only path never reads or requires ground-truth U/V values.
     It returns paths for the input preview, SLIC view, SVR output, and refined
-    estimated colourization.
+    estimated colourization. Optional smooth_chroma applies bilateral edge-preserving
+    smoothing on chrominance to eliminate superpixel step artifacts.
     """
     if compactness is None:
         compactness = COMPACTNESS
@@ -189,11 +190,13 @@ def colorize_live_image(input_path, model_dir="models", output_root="outputs/liv
     refined_v = mrf.refine_chrominance(predicted_v, segment_ids, segments, gamma=gamma)
     _validate_superpixel_arrays(refined_u, refined_v, segment_ids, segments, "MRF")
     _print_chrominance_stats("MRF", refined_u, refined_v)
-    final_rgb = mrf.yuv_to_rgb(
-        y,
-        mrf.values_to_image(refined_u, segment_ids, segments),
-        mrf.values_to_image(refined_v, segment_ids, segments),
-    )
+    refined_u_img = mrf.values_to_image(refined_u, segment_ids, segments)
+    refined_v_img = mrf.values_to_image(refined_v, segment_ids, segments)
+    if smooth_chroma:
+        print("Applying bilateral edge-preserving chrominance smoothing...")
+        refined_u_img = cv2.bilateralFilter(refined_u_img.astype(np.float32), 7, 15, 7)
+        refined_v_img = cv2.bilateralFilter(refined_v_img.astype(np.float32), 7, 15, 7)
+    final_rgb = mrf.yuv_to_rgb(y, refined_u_img, refined_v_img)
     _validate_live_result(y, feature_matrix, scaler, refined_u, refined_v, final_rgb)
 
     preview_path = output_dir / "input_preview.png"
@@ -207,7 +210,8 @@ def colorize_live_image(input_path, model_dir="models", output_root="outputs/liv
     np.savez_compressed(predicted_uv_path, u=predicted_u, v=predicted_v,
                         segment_ids=segment_ids)
     np.savez_compressed(refined_uv_path, u=refined_u, v=refined_v,
-                        segment_ids=segment_ids, compactness=compactness, gamma=gamma)
+                        segment_ids=segment_ids, compactness=compactness, gamma=gamma,
+                        smooth_chroma=smooth_chroma)
     for path in (preview_path, slic_path, svr_path, final_path,
                  predicted_uv_path, refined_uv_path):
         if not path.is_file() or path.stat().st_size == 0:

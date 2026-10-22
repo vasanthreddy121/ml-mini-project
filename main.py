@@ -21,6 +21,8 @@ def main():
                         help="SLIC compactness for live colorize (default: from config)")
     parser.add_argument("--gamma", type=float, default=None,
                         help="MRF smoothing gamma for live colorize (default: from config)")
+    parser.add_argument("--smooth-chroma", action="store_true",
+                        help="apply bilateral edge-preserving smoothing to chrominance maps")
     parser.add_argument("--output-dir", default=None,
                         help="output directory root for live colorize (default: outputs/live)")
     parser.add_argument("--div2k-limit", type=int, default=DIV2K_PILOT_IMAGES,
@@ -53,6 +55,7 @@ def main():
                 output_root=output_root,
                 compactness=args.compactness,
                 gamma=args.gamma,
+                smooth_chroma=args.smooth_chroma,
             )
         except (FileNotFoundError, OSError, ValueError) as error:
             parser.error(str(error))
