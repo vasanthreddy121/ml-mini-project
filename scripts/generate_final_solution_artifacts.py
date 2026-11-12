@@ -97,19 +97,13 @@ def generate_nature_panels():
             output_root=str(FINAL_DIR / "cache_baseline"),
             compactness=10.0, gamma=2.0
         )
-        # 2. SLIC 0.2 Candidate
-        out_cand = colorize.colorize_live_image(
-            str(img_path), model_dir="models_experiment_comp0.2",
-            output_root=str(FINAL_DIR / "cache_cand0.2"),
-            compactness=0.2, gamma=0.1
-        )
-        # 3. Nature-Aware ExtraTrees (Top model)
+        # 2. Nature-Aware ExtraTrees (Top model)
         out_et = colorize.colorize_live_image(
             str(img_path), model_dir="models_sprint_et_nature",
             output_root=str(FINAL_DIR / "cache_et"),
             compactness=0.2, gamma=0.2
         )
-        # 4. Nature-Aware SVR
+        # 3. Nature-Aware SVR
         out_svr = colorize.colorize_live_image(
             str(img_path), model_dir="models_sprint_svr_nature",
             output_root=str(FINAL_DIR / "cache_svr"),
@@ -118,7 +112,6 @@ def generate_nature_panels():
 
         gray = cv2.imread(str(out_base["input_preview"]))
         base_img = cv2.imread(str(out_base["mrf_refined"]))
-        cand_img = cv2.imread(str(out_cand["mrf_refined"]))
         et_img = cv2.imread(str(out_et["mrf_refined"]))
         svr_img = cv2.imread(str(out_svr["mrf_refined"]))
 

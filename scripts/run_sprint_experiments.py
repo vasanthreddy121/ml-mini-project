@@ -190,25 +190,21 @@ def train_and_save_models(X_train, y_train_u, y_train_v):
     return scaler, (svr_u, svr_v), (et_u, et_v)
 
 
-def evaluate_split_full(split_name, model_dir, candidate_label, gamma=0.2):
+def evaluate_split_full(split_name, model_dir, candidate_label, gamma=0.2, compactness=10.0):
     """Run full evaluation on a dataset split with exact per-image and average metrics."""
     scaler, model_u, model_v = colorize.load_models(model_dir)
     proc_dir = Path("outputs/processed") / split_name
-    seg_dir = Path("outputs/segmentation") / split_name
-    feat_dir = Path("outputs/features") / split_name
 
     rows = []
     for proc_path in sorted(proc_dir.glob("*.npz")):
         stem = proc_path.stem
-        seg_path = seg_dir / f"{stem}_segments.npy"
-        feat_path = feat_dir / f"{stem}_features.npz"
-
         proc = np.load(proc_path)
-        segs = np.load(seg_path)
-        fdata = np.load(feat_path)
         y = proc["y"]
-        sids = fdata["segment_ids"]
-        feats = scaler.transform(fdata["features"])
+        # Recompute superpixels and features for the requested compactness so
+        # baseline cached features (compactness=10.0) are never mismatched.
+        segs = segmentation.segment_image(y, compactness=compactness)
+        raw_feats, sids = features.extract_fft_features(y, segs)
+        feats = scaler.transform(raw_feats)
 
         pu = model_u.predict(feats)
         pv = model_v.predict(feats)
@@ -246,6 +242,7 @@ def evaluate_split_full(split_name, model_dir, candidate_label, gamma=0.2):
             "image": stem,
             "method": candidate_label,
             "split": split_name,
+            "compactness": compactness,
             "gamma": gamma,
             "mae": m_mrf["mae"],
             "mse": m_mrf["mse"],
@@ -273,11 +270,11 @@ def evaluate_split_full(split_name, model_dir, candidate_label, gamma=0.2):
 def run_comprehensive_evaluation():
     """Evaluate Baseline, DIV2K-only, SLIC-0.2 candidate, and new models."""
     models_to_test = [
-        ("Baseline SVR (models/)", "models", 2.0),
-        ("SLIC-0.2 Candidate (models_exp_0.2/)", "models_experiment_comp0.2", 0.1),
-        ("DIV2K-only SVR (models_div2k/)", "models_div2k", 2.0),
-        ("New Nature-Aware SVR (models_sprint_svr/)", str(MODELS_SVR_DIR), 0.2),
-        ("New Nature-Aware ExtraTrees (models_sprint_et/)", str(MODELS_ET_DIR), 0.2),
+        ("Baseline SVR (models/)", "models", 10.0, 2.0),
+        ("SLIC-0.2 Candidate (models_exp_0.2/)", "models_experiment_comp0.2", 0.2, 0.1),
+        ("DIV2K-only SVR (models_div2k/)", "models_div2k", 10.0, 2.0),
+        ("New Nature-Aware SVR (models_sprint_svr/)", str(MODELS_SVR_DIR), 0.2, 0.2),
+        ("New Nature-Aware ExtraTrees (models_sprint_et/)", str(MODELS_ET_DIR), 0.2, 0.2),
     ]
 
     all_test_rows = []
@@ -287,14 +284,15 @@ def run_comprehensive_evaluation():
     print("COMPREHENSIVE TEST SET EVALUATION (6 UNTOUCHED TEST NATURE IMAGES)")
     print("="*80)
 
-    for label, mdir, gamma in models_to_test:
+    for label, mdir, compactness, gamma in models_to_test:
         if not Path(mdir).is_dir():
             print(f"Skipping {label} (directory not found: {mdir})")
             continue
-        rows, avgs = evaluate_split_full("test", mdir, label, gamma=gamma)
+        rows, avgs = evaluate_split_full("test", mdir, label, gamma=gamma, compactness=compactness)
         all_test_rows.extend(rows)
         summary_table.append({
             "model": label,
+            "compactness": compactness,
             "gamma": gamma,
             "mae": avgs["mae"],
             "mse": avgs["mse"],
@@ -309,7 +307,7 @@ def run_comprehensive_evaluation():
     # Write per-image CSV
     csv_path = OUTPUT_SPRINT_DIR / "test_comparison_all_models.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as f:
-        fields = ["image", "method", "split", "gamma", "mae", "mse", "rgb_rmse", "psnr", "u_mae", "v_mae", "mean_uv_mae"]
+        fields = ["image", "method", "split", "compactness", "gamma", "mae", "mse", "rgb_rmse", "psnr", "u_mae", "v_mae", "mean_uv_mae"]
         writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(all_test_rows)
@@ -318,6 +316,7 @@ def run_comprehensive_evaluation():
                 "image": "AVERAGE",
                 "method": s["model"],
                 "split": "test",
+                "compactness": s["compactness"],
                 "gamma": s["gamma"],
                 "mae": s["mae"],
                 "mse": s["mse"],
