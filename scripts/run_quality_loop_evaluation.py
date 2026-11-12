@@ -64,7 +64,7 @@ def build_panel(panels, master_title, out_path):
     final_canvas[header_h:, :] = combined
 
     cv2.putText(final_canvas, master_title, (18, 29), cv2.FONT_HERSHEY_SIMPLEX, 0.68, (240, 240, 245), 2, cv2.LINE_AA)
-    cv2.imwrite(str(out_path), final_canvas)
+    colorize.save_rgb(out_path, final_canvas)
     print(f"Saved: {out_path} ({final_canvas.shape[1]}x{final_canvas.shape[0]})")
 
 
@@ -219,7 +219,7 @@ def generate_visual_comparisons():
         # DDColor Benchmark
         dd_path = Path("outputs/review_demo/pretrained/human_test/ddcolor_colorization.png")
         if dd_path.is_file():
-            rgb_dd = cv2.imread(str(dd_path))
+            rgb_dd = cv2.cvtColor(cv2.imread(str(dd_path)), cv2.COLOR_BGR2RGB)
         else:
             rgb_dd = rgb_n
 

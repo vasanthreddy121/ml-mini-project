@@ -1,10 +1,12 @@
 """Test-time SVR-only colorization using saved superpixel features."""
 
 from pathlib import Path
+import warnings
 
 import cv2
 import joblib
 import numpy as np
+from sklearn.exceptions import InconsistentVersionWarning
 
 from src import features, mrf, segmentation
 from src.config import COMPACTNESS, ICM_ITERATIONS, MRF_GAMMA
@@ -22,9 +24,15 @@ def load_models(model_dir="models"):
     missing = [str(model_dir / name) for name in required if not (model_dir / name).is_file()]
     if missing:
         raise FileNotFoundError("Missing trained model file(s): " + ", ".join(missing))
-    return (joblib.load(model_dir / "feature_scaler.joblib"),
-            joblib.load(model_dir / "svr_u.joblib"),
-            joblib.load(model_dir / "svr_v.joblib"))
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=r"Trying to unpickle estimator .* from version 1\.9\.0 when using version 1\.9\.",
+            category=InconsistentVersionWarning,
+        )
+        return (joblib.load(model_dir / "feature_scaler.joblib"),
+                joblib.load(model_dir / "svr_u.joblib"),
+                joblib.load(model_dir / "svr_v.joblib"))
 
 
 def values_to_image(values, segment_ids, segments):
